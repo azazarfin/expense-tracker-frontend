@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../api'; // Import the centralized API client
 import ThemeToggle from '../components/ThemeToggle';
 import Footer from '../components/Footer';
 import { ChapterContext } from '../context/ChapterContext';
@@ -38,7 +38,7 @@ function HistoryPage() {
     const fetchHistory = async () => {
       setIsLoading(true);
       try {
-        const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
+        // --- FIX: Use the centralized api instance ---
         const res = await api.get(`/api/chapters/${activeChapter._id}/history`);
         setHistory(res.data);
       } catch (error) {
@@ -58,7 +58,7 @@ function HistoryPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-8 font-sans flex flex-col">
       <header className="mb-8 flex justify-between items-center">
-        <Link to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'} className="text-blue-500 dark:text-blue-400 hover:underline font-semibold">
+        <Link to={user.role === 'admin' ? '/admin' : '/dashboard'} className="text-blue-500 dark:text-blue-400 hover:underline font-semibold">
           &larr; Back to Dashboard
         </Link>
         <ThemeToggle />
@@ -95,7 +95,7 @@ const TransactionCard = ({ transaction, user, activeChapterId }) => {
     }
     if (window.confirm('Are you sure you want to delete this transaction? This will revert the funds.')) {
         try {
-            const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
+            // --- FIX: Use the centralized api instance ---
             await api.delete(`/api/chapters/${activeChapterId}/transactions/${id}`);
             alert('Transaction deleted. The page will now refresh to show changes.');
             window.location.reload();
@@ -141,7 +141,6 @@ const TransactionCard = ({ transaction, user, activeChapterId }) => {
             </div>
         ) : (
             <div>
-                {/* --- FIX: Added the per-person amount calculation --- */}
                 <h4 className="font-semibold mb-2 dark:text-gray-200">
                   Participants (Equal Split
                   {transaction.participants.length > 0 && 
@@ -169,7 +168,7 @@ const ActivityCard = ({ activity, user, activeChapterId }) => {
     }
     if (window.confirm('Are you sure you want to delete this activity? This will revert the funds.')) {
         try {
-            const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
+            // --- FIX: Use the centralized api instance ---
             await api.delete(`/api/chapters/${activeChapterId}/activities/${id}`);
             alert('Activity deleted. The page will now refresh to show changes.');
             window.location.reload();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import api from '../api'; // Import the centralized API client
 import ThemeToggle from '../components/ThemeToggle';
 import Footer from '../components/Footer';
 import { ChapterContext } from '../context/ChapterContext';
@@ -22,7 +22,7 @@ function AdminAddExpensePage() {
     if (!user?.token || !activeChapter) return;
 
     try {
-      const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
+      // --- FIX: Use the centralized api instance ---
       const res = await api.get(`/api/chapters/${activeChapter._id}/users`);
       
       const filteredUsers = res.data.filter(u => u._id !== user._id);
@@ -89,7 +89,7 @@ function AdminAddExpensePage() {
     }
 
     try {
-        const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
+        // --- FIX: Use the centralized api instance ---
         await api.post(`/api/chapters/${activeChapter._id}/transactions`, payload);
         alert('Expense created successfully!');
         navigate('/admin/dashboard');

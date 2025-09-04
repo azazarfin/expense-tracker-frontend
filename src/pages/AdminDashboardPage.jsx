@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import api from '../api'; // Import the centralized API client
 import ThemeToggle from '../components/ThemeToggle';
 import Footer from '../components/Footer';
 import { ChapterContext } from '../context/ChapterContext';
@@ -10,7 +10,7 @@ function AdminDashboardPage() {
   const { activeChapter, isLoadingChapters } = useContext(ChapterContext);
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState({ centralBalance: 0 });
-  const [users, setUsers] = useState([]); // This will now only contain members
+  const [users, setUsers] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -31,18 +31,18 @@ function AdminDashboardPage() {
     }
     setIsLoading(true);
     try {
-      const api = axios.create({ headers: { Authorization: `Bearer ${currentUser.token}` } });
       const chapterId = chapter._id;
 
+      // --- FIX: Use the single 'api' client for all requests ---
       const [statsRes, usersRes, historyRes] = await Promise.all([
         api.get(`/api/chapters/${chapterId}/stats/central-balance`),
-        api.get(`/api/chapters/${chapterId}/users`), // Now only returns members
+        api.get(`/api/chapters/${chapterId}/users`),
         api.get(`/api/chapters/${chapterId}/history`),
       ]);
       
       setStats(statsRes.data);
       setTransactions(historyRes.data.filter(item => item.type === 'TRANSACTION').map(item => item.data));
-      setUsers(usersRes.data); // No need to filter here anymore
+      setUsers(usersRes.data);
 
     } catch (error) {
       console.error("Failed to fetch admin data for chapter", error);
@@ -95,19 +95,15 @@ function AdminDashboardPage() {
         {isLoading ? (
             <p className="text-center dark:text-gray-300">Loading Chapter Data...</p>
         ) : activeChapter ? (
-            // --- FIX: Reordered layout for mobile-first view ---
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Right Column (now appears first in code for mobile order) */}
               <div className="lg:col-start-3 lg:col-span-1 space-y-8">
                 <StatsCard centralBalance={stats.centralBalance} />
                 <UserBalances users={users} />
               </div>
-
-              {/* Left Column (now appears second for mobile order) */}
               <div className="lg:col-span-2 lg:row-start-1 space-y-8">
-                <FundManagement users={users} token={user.token} refreshData={refreshData} activeChapterId={activeChapter._id} />
+                <FundManagement users={users} refreshData={refreshData} activeChapterId={activeChapter._id} />
                 <AdminAddExpense />
-                <TransactionHistory transactions={transactions} token={user.token} refreshData={refreshData} activeChapterId={activeChapter._id} />
+                <TransactionHistory transactions={transactions} refreshData={refreshData} activeChapterId={activeChapter._id} />
               </div>
             </div>
         ) : (
@@ -148,7 +144,7 @@ const UserBalances = React.memo(function UserBalances({ users }) {
     );
 });
 
-const FundManagement = React.memo(function FundManagement({ users, token, refreshData, activeChapterId }) {
+const FundManagement = React.memo(function FundManagement({ users, refreshData, activeChapterId }) {
     const [selectedUser, setSelectedUser] = useState('');
     const [operation, setOperation] = useState('add');
     const [amount, setAmount] = useState('');
@@ -158,7 +154,7 @@ const FundManagement = React.memo(function FundManagement({ users, token, refres
       if (!selectedUser || !amount || amount <= 0) { return alert('Please select a user and enter a valid amount.'); }
       const url = `/api/chapters/${activeChapterId}/users/${selectedUser}/${operation}-balance`;
       try {
-        const api = axios.create({ headers: { Authorization: `Bearer ${token}` } });
+        // --- FIX: Use the centralized api instance ---
         await api.post(url, { amount: Number(amount) });
         alert('Funds managed successfully!');
         await refreshData();
@@ -198,11 +194,11 @@ const AdminAddExpense = React.memo(function AdminAddExpense() {
     );
 });
 
-const TransactionHistory = React.memo(function TransactionHistory({ transactions, token, refreshData, activeChapterId }) {
+const TransactionHistory = React.memo(function TransactionHistory({ transactions, refreshData, activeChapterId }) {
     const handleDelete = async (transactionId) => {
       if (window.confirm('Are you sure you want to delete this transaction? This will revert the funds.')) {
         try {
-          const api = axios.create({ headers: { Authorization: `Bearer ${token}` } });
+          // --- FIX: Use the centralized api instance ---
           await api.delete(`/api/chapters/${activeChapterId}/transactions/${transactionId}`);
           alert('Transaction deleted.');
           await refreshData();
