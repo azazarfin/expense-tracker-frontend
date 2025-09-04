@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // 2. Create a central axios instance with the correct base URL.
 const api = axios.create({
-  baseURL: API_URL
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
 });
 
 // 3. (Important!) This "interceptor" acts like a gatekeeper.
