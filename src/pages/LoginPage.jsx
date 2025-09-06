@@ -15,7 +15,7 @@ function LoginPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('/api/users/login', formData); // Correct API endpoint and client
+      const response = await api.post('/users/login', formData); // Correct API endpoint and client
       if (response.data) {
         localStorage.setItem('user', JSON.stringify(response.data));
         toast.success('Logged in successfully');

@@ -18,7 +18,7 @@ function RegisterPage() {
     } else {
       const userData = { name, email, password };
       try {
-        const response = await api.post('/api/users', userData); // Correct API endpoint and client
+        const response = await api.post('/users', userData); // Correct API endpoint and client
         if (response.data) {
             localStorage.setItem('user', JSON.stringify(response.data));
             toast.success('Registered successfully');
