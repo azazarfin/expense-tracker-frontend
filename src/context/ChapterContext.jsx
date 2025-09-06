@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
-import api from '../api'; // Import the centralized API client
+import axios from 'axios';
 
 export const ChapterContext = createContext();
 
@@ -11,7 +11,8 @@ export const ChapterProvider = ({ children }) => {
   const [chapters, setChapters] = useState([]);
   const [activeChapter, setActiveChapter] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  
+  // --- FIX: Initialize user from localStorage into state once ---
   const [user] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('user'));
@@ -27,7 +28,7 @@ export const ChapterProvider = ({ children }) => {
     }
     setIsLoading(true);
     try {
-      // --- FIX: Use the centralized api instance ---
+      const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
       const response = await api.get('/api/chapters');
       const fetchedChapters = response.data;
       setChapters(fetchedChapters);
@@ -35,7 +36,7 @@ export const ChapterProvider = ({ children }) => {
       if (fetchedChapters.length > 0) {
         const savedChapterId = localStorage.getItem('activeChapterId');
         let chapterToActivate = fetchedChapters.find(c => c._id === savedChapterId);
-
+        
         if (!chapterToActivate) {
           chapterToActivate = fetchedChapters[0];
           localStorage.setItem('activeChapterId', chapterToActivate._id);
@@ -47,11 +48,13 @@ export const ChapterProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Failed to fetch chapters", error);
+      // Also clear chapters on error to avoid stale data
       setChapters([]);
       setActiveChapter(null);
     } finally {
       setIsLoading(false);
     }
+    // --- FIX: Depend on the stable user object from state ---
   }, [user]);
 
   useEffect(() => {
@@ -64,6 +67,7 @@ export const ChapterProvider = ({ children }) => {
       if (chapterToSwitchTo) {
         setActiveChapter(chapterToSwitchTo);
         localStorage.setItem('activeChapterId', chapterToSwitchTo._id);
+        window.location.reload(); 
       }
     }
   };

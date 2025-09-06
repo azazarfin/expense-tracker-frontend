@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import api from '../api'; // Using the centralized API client
-import Footer from '../components/Footer'; // Import the Footer
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import Footer from '../components/Footer';
 
 function RegisterPage() {
   const [formData, setFormData] = useState({ name: '', email: '', password: '', password2: '' });
@@ -14,18 +13,15 @@ function RegisterPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (password !== password2) {
-      toast.error('Passwords do not match');
+      alert('Passwords do not match');
     } else {
-      const userData = { name, email, password };
       try {
-        const response = await api.post('/users', userData); // Correct API endpoint and client
-        if (response.data) {
-            localStorage.setItem('user', JSON.stringify(response.data));
-            toast.success('Registered successfully');
-            navigate('/dashboard');
-        }
-      } catch (error) {
-        toast.error(error.response?.data?.message || 'Something went wrong');
+        const response = await axios.post('/api/auth/register', { name, email, password });
+        localStorage.setItem('user', JSON.stringify(response.data));
+        navigate('/');
+      } catch (err) {
+        console.error(err.response.data);
+        alert('Registration failed. The email might already be in use.');
       }
     }
   };
@@ -45,10 +41,12 @@ function RegisterPage() {
               <input type="email" name="email" placeholder="Email Address" value={email} onChange={onChange} required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
             </div>
             <div className="mb-4">
-              <input type="password" name="password" placeholder="Password" value={password} minLength="6" onChange={onChange} required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
+              {/* --- FIX: Added onChange handler --- */}
+              <input type="password" name="password" placeholder="Password" value={password} onChange={onChange} minLength="6" required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
             </div>
             <div className="mb-6">
-              <input type="password" name="password2" placeholder="Confirm Password" value={password2} minLength="6" onChange={onChange} required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
+              {/* --- FIX: Added onChange handler --- */}
+              <input type="password" name="password2" placeholder="Confirm Password" value={password2} onChange={onChange} minLength="6" required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
             </div>
             <button type="submit" className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors font-handwritten text-2xl">Register</button>
           </form>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import api from '../api'; // Using the centralized API client
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
 import Footer from '../components/Footer'; // Import the Footer
 
 function LoginPage() {
@@ -15,18 +14,12 @@ function LoginPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('/users/login', formData); // Correct API endpoint and client
-      if (response.data) {
-        localStorage.setItem('user', JSON.stringify(response.data));
-        toast.success('Logged in successfully');
-        if (response.data.role === 'admin') {
-            navigate('/admin/dashboard');
-        } else {
-            navigate('/dashboard');
-        }
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Something went wrong');
+      const response = await axios.post('/api/auth/login', { email, password });
+      localStorage.setItem('user', JSON.stringify(response.data));
+      navigate('/');
+    } catch (err) {
+      console.error(err.response.data);
+      alert('Login failed. Please check your email and password.');
     }
   };
 

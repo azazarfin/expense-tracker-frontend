@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       // Any request starting with '/api' will be forwarded
       '/api': {
-        target: 'http://localhost:5001', // Your backend server address
+        target: 'https://expense-tracker-api-d5gr.onrender.com', // Your backend server address
         changeOrigin: true,
       },
     },

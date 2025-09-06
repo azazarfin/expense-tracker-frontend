@@ -1,47 +1,52 @@
-import React, { useState, useContext } from 'react';
+import React, { useContext } from 'react';
 import { ChapterContext } from '../context/ChapterContext';
-import { toast } from 'react-toastify';
-import api from '../api'; // Import the centralized API client
+import axios from 'axios';
 
-const ChapterManager = () => {
-  const [newChapterName, setNewChapterName] = useState('');
-  const { refreshChapters } = useContext(ChapterContext);
+function ChapterManager() {
+  const { chapters, activeChapter, switchChapter, refreshChapters, isLoading } = useContext(ChapterContext);
+  const user = JSON.parse(localStorage.getItem('user'));
 
-  const handleAddChapter = async (e) => {
-    e.preventDefault();
-    if (!newChapterName.trim()) {
-      toast.error('Chapter name cannot be empty');
-      return;
-    }
-
-    try {
-      // --- FIX: Use the centralized api instance ---
-      await api.post('/api/chapters', { name: newChapterName });
-      toast.success('Chapter added successfully');
-      setNewChapterName('');
-      refreshChapters(); // Refresh the chapters list
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to add chapter');
+  const handleCreateChapter = async () => {
+    const name = prompt("Enter the name for the new chapter (e.g., 'September Expenses'):");
+    if (name && name.trim()) {
+      try {
+        const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
+        await api.post('/api/chapters', { name: name.trim() });
+        alert(`Chapter "${name.trim()}" created successfully!`);
+        await refreshChapters(); // Re-fetch the chapter list
+      } catch (error) {
+        console.error("Failed to create chapter", error);
+        alert("Failed to create chapter.");
+      }
     }
   };
 
+  if (isLoading) {
+    return <div className="text-sm text-gray-500 dark:text-gray-400">Loading chapters...</div>;
+  }
+
   return (
-    <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
-      <h3 className="text-xl font-bold mb-2">Manage Chapters</h3>
-      <form onSubmit={handleAddChapter} className="flex gap-2">
-        <input
-          type="text"
-          value={newChapterName}
-          onChange={(e) => setNewChapterName(e.target.value)}
-          placeholder="New chapter name"
-          className="flex-grow p-2 border rounded"
-        />
-        <button type="submit" className="p-2 bg-indigo-600 text-white rounded">
-          Add Chapter
-        </button>
-      </form>
+    <div className="flex items-center gap-4">
+      {chapters.length > 0 && activeChapter ? (
+        <select
+          value={activeChapter._id}
+          onChange={(e) => switchChapter(e.target.value)}
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+        >
+          {chapters.map((chapter) => (
+            <option key={chapter._id} value={chapter._id}>
+              {chapter.name}
+            </option>
+          ))}
+        </select>
+      ) : (
+         <p className="text-sm text-gray-500 dark:text-gray-400">No chapters found.</p>
+      )}
+      <button onClick={handleCreateChapter} className="p-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600">
+        + New Chapter
+      </button>
     </div>
   );
-};
+}
 
 export default ChapterManager;
