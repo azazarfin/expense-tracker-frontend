@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import API from '../api'; // UPDATED: Import the configured API instance
 import ThemeToggle from '../components/ThemeToggle';
 import Footer from '../components/Footer';
 import { ChapterContext } from '../context/ChapterContext';
@@ -12,9 +12,6 @@ function HistoryPage() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // --- FIX: Split useEffect into two hooks to prevent the infinite loop ---
-
-  // Effect 1: Get the user from localStorage. This runs only once.
   useEffect(() => {
     try {
       const storedUser = JSON.parse(localStorage.getItem('user'));
@@ -29,11 +26,8 @@ function HistoryPage() {
     }
   }, [navigate]);
 
-  // Effect 2: Fetch data ONLY when the user and activeChapter are ready.
   useEffect(() => {
-    // Don't do anything if we don't have the necessary info yet.
     if (!user || !activeChapter) {
-      // If chapters have finished loading but there's no active one, stop loading the page.
       if (!isLoadingChapters) {
         setIsLoading(false);
         setHistory([]);
@@ -44,8 +38,8 @@ function HistoryPage() {
     const fetchHistory = async () => {
       setIsLoading(true);
       try {
-        const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
-        const res = await api.get(`/api/chapters/${activeChapter._id}/history`);
+        // UPDATED: Use the central API instance and no '/api' prefix
+        const res = await API.get(`/chapters/${activeChapter._id}/history`);
         setHistory(res.data);
       } catch (error) {
         console.error("Failed to fetch history", error);
@@ -55,7 +49,7 @@ function HistoryPage() {
     };
 
     fetchHistory();
-  }, [user, activeChapter, isLoadingChapters]); // Dependencies are now safe
+  }, [user, activeChapter, isLoadingChapters]);
 
   if (isLoading || !user) {
     return <div className="p-8 font-handwritten text-3xl text-center dark:bg-gray-900 dark:text-gray-200">Loading History...</div>;
@@ -93,7 +87,7 @@ function HistoryPage() {
   );
 }
 
-// --- Helper Components (No changes needed below) ---
+// --- Helper Components ---
 const TransactionCard = ({ transaction, user, activeChapterId }) => {
   const handleDelete = async (id) => {
     if (!activeChapterId) {
@@ -102,8 +96,8 @@ const TransactionCard = ({ transaction, user, activeChapterId }) => {
     }
     if (window.confirm('Are you sure you want to delete this transaction? This will revert the funds.')) {
         try {
-            const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
-            await api.delete(`/api/chapters/${activeChapterId}/transactions/${id}`);
+            // UPDATED: Use the central API instance and no '/api' prefix
+            await API.delete(`/chapters/${activeChapterId}/transactions/${id}`);
             alert('Transaction deleted. The page will now refresh to show changes.');
             window.location.reload();
         } catch (error) {
@@ -148,14 +142,12 @@ const TransactionCard = ({ transaction, user, activeChapterId }) => {
             </div>
         ) : (
             <div>
-                {/* --- MODIFICATION START: Show detailed list for equal split --- */}
                 <h4 className="font-semibold mb-2 dark:text-gray-200">Participants (Equal Split):</h4>
                 <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 pl-2 space-y-1">
                     {transaction.splitDetails.map(detail => (
                         <li key={detail.user._id}>{detail.user.name} - {detail.amount.toFixed(2)} TK</li>
                     ))}
                 </ul>
-                {/* --- MODIFICATION END --- */}
             </div>
         )}
       </div>
@@ -166,7 +158,6 @@ const TransactionCard = ({ transaction, user, activeChapterId }) => {
 const ActivityCard = ({ activity, user, activeChapterId }) => {
   const isAdd = activity.type === 'ADD_BALANCE';
   
-  // --- MODIFICATION START: Added delete handler for activities ---
   const handleDelete = async (id) => {
     if (!activeChapterId) {
         alert("Cannot delete: No active chapter found.");
@@ -174,9 +165,8 @@ const ActivityCard = ({ activity, user, activeChapterId }) => {
     }
     if (window.confirm('Are you sure you want to delete this activity? This will revert the balance change.')) {
         try {
-            const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
-            // Note: This assumes your API has an endpoint to delete activities.
-            await api.delete(`/api/chapters/${activeChapterId}/activities/${id}`);
+            // UPDATED: Use the central API instance and no '/api' prefix
+            await API.delete(`/chapters/${activeChapterId}/activities/${id}`);
             alert('Activity deleted. The page will now refresh to show changes.');
             window.location.reload();
         } catch (error) {
@@ -184,7 +174,6 @@ const ActivityCard = ({ activity, user, activeChapterId }) => {
         }
     }
   };
-  // --- MODIFICATION END ---
 
   return (
     <div className={`border-l-4 ${isAdd ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-red-500 bg-red-50 dark:bg-red-900/20'} rounded-r-lg p-4`}>
@@ -193,7 +182,6 @@ const ActivityCard = ({ activity, user, activeChapterId }) => {
             <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{isAdd ? 'Balance Added' : 'Balance Removed'}</p>
             <p className="text-sm text-gray-600 dark:text-gray-300">Funds were {isAdd ? 'added to' : 'removed from'} <span className="font-semibold">{activity.targetUser.name}</span>.</p>
         </div>
-        {/* --- MODIFICATION START: Added wrapper and delete button --- */}
         <div className="flex items-center gap-4">
             <div className="text-right">
                 <p className={`font-bold text-2xl ${isAdd ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>{isAdd ? '+' : '-'}{activity.amount.toFixed(2)} TK</p>
@@ -201,7 +189,6 @@ const ActivityCard = ({ activity, user, activeChapterId }) => {
             </div>
             {user.role === 'admin' && <button onClick={() => handleDelete(activity._id)} className="text-red-500 hover:text-red-700 font-bold p-1">X</button>}
         </div>
-        {/* --- MODIFICATION END --- */}
        </div>
     </div>
   );

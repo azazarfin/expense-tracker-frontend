@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import API from '../api'; // UPDATED: Import the configured API instance
 import Footer from '../components/Footer';
 import ThemeToggle from '../components/ThemeToggle';
 import { ChapterContext } from '../context/ChapterContext';
@@ -23,13 +23,13 @@ function DashboardPage() {
     }
     setIsLoading(true);
     try {
-      const api = axios.create({ headers: { Authorization: `Bearer ${currentUser.token}` } });
       const chapterId = chapter._id;
 
+      // UPDATED: Use the central API instance directly and remove '/api' prefix
       const [membershipRes, historyRes, statsRes] = await Promise.all([
-        api.get(`/api/chapters/${chapterId}/users/me/membership`),
-        api.get(`/api/chapters/${chapterId}/history`),
-        api.get(`/api/chapters/${chapterId}/stats/central-balance`),
+        API.get(`/chapters/${chapterId}/users/me/membership`),
+        API.get(`/chapters/${chapterId}/history`),
+        API.get(`/chapters/${chapterId}/stats/central-balance`),
       ]);
       
       setPersonalBalance(membershipRes.data.balance);

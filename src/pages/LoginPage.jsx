@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import Footer from '../components/Footer'; // Import the Footer
+import API from '../api'; // UPDATED: Import the configured API instance
+import Footer from '../components/Footer';
 
 function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -14,7 +14,8 @@ function LoginPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
+      // UPDATED: Use the central API instance and no '/api' prefix
+      const response = await API.post('/auth/login', { email, password });
       localStorage.setItem('user', JSON.stringify(response.data));
       navigate('/');
     } catch (err) {
@@ -45,7 +46,7 @@ function LoginPage() {
           <Link to="/register" className="text-blue-500 hover:underline dark:text-blue-400">Register Now 😊</Link>
         </p>
       </div>
-      <div className="mt-auto"> {/* Pushes footer to the bottom */}
+      <div className="mt-auto">
         <Footer />
       </div>
     </div>

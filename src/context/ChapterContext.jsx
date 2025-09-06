@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
-import axios from 'axios';
+import API from '../api'; // UPDATED: Import the configured API instance
 
 export const ChapterContext = createContext();
 
@@ -12,7 +12,6 @@ export const ChapterProvider = ({ children }) => {
   const [activeChapter, setActiveChapter] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // --- FIX: Initialize user from localStorage into state once ---
   const [user] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('user'));
@@ -28,8 +27,8 @@ export const ChapterProvider = ({ children }) => {
     }
     setIsLoading(true);
     try {
-      const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
-      const response = await api.get('/api/chapters');
+      // UPDATED: Use the central API instance directly and no '/api' prefix
+      const response = await API.get('/chapters');
       const fetchedChapters = response.data;
       setChapters(fetchedChapters);
 
@@ -48,13 +47,11 @@ export const ChapterProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Failed to fetch chapters", error);
-      // Also clear chapters on error to avoid stale data
       setChapters([]);
       setActiveChapter(null);
     } finally {
       setIsLoading(false);
     }
-    // --- FIX: Depend on the stable user object from state ---
   }, [user]);
 
   useEffect(() => {

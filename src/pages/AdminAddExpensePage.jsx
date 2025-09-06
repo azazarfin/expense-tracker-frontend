@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import API from '../api'; // UPDATED: Import the configured API instance
 import ThemeToggle from '../components/ThemeToggle';
 import Footer from '../components/Footer';
 import { ChapterContext } from '../context/ChapterContext';
@@ -22,8 +22,8 @@ function AdminAddExpensePage() {
     if (!user?.token || !activeChapter) return;
 
     try {
-      const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
-      const res = await api.get(`/api/chapters/${activeChapter._id}/users`);
+      // UPDATED: Use the central API instance and no '/api' prefix
+      const res = await API.get(`/chapters/${activeChapter._id}/users`);
       
       const filteredUsers = res.data.filter(u => u._id !== user._id);
       setAllUsers(filteredUsers);
@@ -89,8 +89,8 @@ function AdminAddExpensePage() {
     }
 
     try {
-        const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
-        await api.post(`/api/chapters/${activeChapter._id}/transactions`, payload);
+        // UPDATED: Use the central API instance and no '/api' prefix
+        await API.post(`/chapters/${activeChapter._id}/transactions`, payload);
         alert('Expense created successfully!');
         navigate('/admin/dashboard');
     } catch (error) { alert(`Error: ${error.response?.data?.message || 'An error occurred'}`); }

@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { ChapterContext } from '../context/ChapterContext';
-import axios from 'axios';
+import API from '../api'; // UPDATED: Import the configured API instance
 
 function ChapterManager() {
   const { chapters, activeChapter, switchChapter, refreshChapters, isLoading } = useContext(ChapterContext);
@@ -10,8 +10,8 @@ function ChapterManager() {
     const name = prompt("Enter the name for the new chapter (e.g., 'September Expenses'):");
     if (name && name.trim()) {
       try {
-        const api = axios.create({ headers: { Authorization: `Bearer ${user.token}` } });
-        await api.post('/api/chapters', { name: name.trim() });
+        // UPDATED: Use the central API instance directly and no '/api' prefix
+        await API.post('/chapters', { name: name.trim() });
         alert(`Chapter "${name.trim()}" created successfully!`);
         await refreshChapters(); // Re-fetch the chapter list
       } catch (error) {

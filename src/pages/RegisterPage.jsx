@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import API from '../api'; // UPDATED: Import the configured API instance
 import Footer from '../components/Footer';
 
 function RegisterPage() {
@@ -16,7 +16,8 @@ function RegisterPage() {
       alert('Passwords do not match');
     } else {
       try {
-        const response = await axios.post('/api/auth/register', { name, email, password });
+        // UPDATED: Use the central API instance and no '/api' prefix
+        const response = await API.post('/auth/register', { name, email, password });
         localStorage.setItem('user', JSON.stringify(response.data));
         navigate('/');
       } catch (err) {
@@ -41,11 +42,9 @@ function RegisterPage() {
               <input type="email" name="email" placeholder="Email Address" value={email} onChange={onChange} required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
             </div>
             <div className="mb-4">
-              {/* --- FIX: Added onChange handler --- */}
               <input type="password" name="password" placeholder="Password" value={password} onChange={onChange} minLength="6" required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
             </div>
             <div className="mb-6">
-              {/* --- FIX: Added onChange handler --- */}
               <input type="password" name="password2" placeholder="Confirm Password" value={password2} onChange={onChange} minLength="6" required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
             </div>
             <button type="submit" className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors font-handwritten text-2xl">Register</button>

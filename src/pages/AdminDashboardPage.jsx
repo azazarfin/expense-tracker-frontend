@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import API from '../api'; // UPDATED: Import the configured API instance
 import ThemeToggle from '../components/ThemeToggle';
 import Footer from '../components/Footer';
 import { ChapterContext } from '../context/ChapterContext';
@@ -12,7 +12,7 @@ function AdminDashboardPage() {
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState({ centralBalance: 0 });
   const [users, setUsers] = useState([]);
-  const [adminUser, setAdminUser] = useState(null); // State to hold the full admin user object with balance
+  const [adminUser, setAdminUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -33,20 +33,19 @@ function AdminDashboardPage() {
     }
     setIsLoading(true);
     try {
-      const api = axios.create({ headers: { Authorization: `Bearer ${currentUser.token}` } });
       const chapterId = chapter._id;
 
+      // UPDATED: Use the central API instance directly
       const [statsRes, usersRes, historyRes] = await Promise.all([
-        api.get(`/api/chapters/${chapterId}/stats/central-balance`),
-        api.get(`/api/chapters/${chapterId}/users`),
-        api.get(`/api/chapters/${chapterId}/history`),
+        API.get(`/chapters/${chapterId}/stats/central-balance`),
+        API.get(`/chapters/${chapterId}/users`),
+        API.get(`/chapters/${chapterId}/history`),
       ]);
       
       setStats(statsRes.data);
       const allTransactions = historyRes.data.filter(item => item.type === 'TRANSACTION').map(item => item.data);
       setTransactions(allTransactions);
       
-      // Separate the admin from other users
       const adminData = usersRes.data.find(u => u._id === currentUser._id);
       const memberUsers = usersRes.data.filter(u => u._id !== currentUser._id);
       setAdminUser(adminData);
@@ -104,17 +103,12 @@ function AdminDashboardPage() {
             <p className="text-center dark:text-gray-300">Loading Chapter Data...</p>
         ) : activeChapter ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* --- MODIFICATION START --- */}
-              {/* Added responsive 'order' classes to swap these blocks on mobile */}
               <div className="lg:col-span-2 space-y-8 order-2 lg:order-1">
-              {/* --- MODIFICATION END --- */}
-                <FundManagement users={users} token={user.token} refreshData={refreshData} activeChapterId={activeChapter._id} />
+                <FundManagement users={users} refreshData={refreshData} activeChapterId={activeChapter._id} />
                 <AdminAddExpense />
-                <TransactionHistory transactions={transactions} token={user.token} refreshData={refreshData} activeChapterId={activeChapter._id} />
+                <TransactionHistory transactions={transactions} refreshData={refreshData} activeChapterId={activeChapter._id} />
               </div>
-              {/* --- MODIFICATION START --- */}
               <div className="lg:col-span-1 space-y-8 order-1 lg:order-2">
-              {/* --- MODIFICATION END --- */}
                 <StatsCard centralBalance={stats.centralBalance} />
                 <UserBalances users={users} adminUser={adminUser} />
               </div>
@@ -132,7 +126,7 @@ function AdminDashboardPage() {
 }
 
 
-// --- Sub-components (with original styling) ---
+// --- Sub-components ---
 const StatsCard = React.memo(function StatsCard({ centralBalance }) {
     return (
         <div className="bg-cyan-500 text-white p-6 rounded-2xl shadow-lg">
@@ -159,7 +153,7 @@ const UserBalances = React.memo(function UserBalances({ users, adminUser }) {
     );
 });
 
-const FundManagement = React.memo(function FundManagement({ users, token, refreshData, activeChapterId }) {
+const FundManagement = React.memo(function FundManagement({ users, refreshData, activeChapterId }) {
     const [selectedUser, setSelectedUser] = useState('');
     const [operation, setOperation] = useState('add');
     const [amount, setAmount] = useState('');
@@ -167,10 +161,13 @@ const FundManagement = React.memo(function FundManagement({ users, token, refres
     const handleSubmit = async (e) => {
       e.preventDefault();
       if (!selectedUser || !amount || amount <= 0) { return alert('Please select a user and enter a valid amount.'); }
-      const url = `/api/chapters/${activeChapterId}/users/${selectedUser}/${operation}-balance`;
+      
+      // UPDATED: No '/api' prefix
+      const url = `/chapters/${activeChapterId}/users/${selectedUser}/${operation}-balance`;
+      
       try {
-        const api = axios.create({ headers: { Authorization: `Bearer ${token}` } });
-        await api.post(url, { amount: Number(amount) });
+        // UPDATED: Use the central API instance
+        await API.post(url, { amount: Number(amount) });
         alert('Funds managed successfully!');
         await refreshData();
         setSelectedUser('');
@@ -209,12 +206,12 @@ const AdminAddExpense = React.memo(function AdminAddExpense() {
     );
 });
 
-const TransactionHistory = React.memo(function TransactionHistory({ transactions, token, refreshData, activeChapterId }) {
+const TransactionHistory = React.memo(function TransactionHistory({ transactions, refreshData, activeChapterId }) {
     const handleDelete = async (id) => {
       if (window.confirm('Are you sure you want to delete this transaction? This will revert the funds.')) {
         try {
-          const api = axios.create({ headers: { Authorization: `Bearer ${token}` } });
-          await api.delete(`/api/chapters/${activeChapterId}/transactions/${id}`);
+          // UPDATED: Use the central API instance and no '/api' prefix
+          await API.delete(`/chapters/${activeChapterId}/transactions/${id}`);
           alert('Transaction deleted.');
           await refreshData();
         } catch (error) { alert(`Error: ${error.response.data.message}`); }
