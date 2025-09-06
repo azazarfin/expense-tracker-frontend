@@ -45,10 +45,10 @@ function RegisterPage() {
               <input type="email" name="email" placeholder="Email Address" value={email} onChange={onChange} required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
             </div>
             <div className="mb-4">
-              <input type="password" name="password" placeholder="Password" value={password} minLength="6" required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
+              <input type="password" name="password" placeholder="Password" value={password} minLength="6" onChange={onChange} required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
             </div>
             <div className="mb-6">
-              <input type="password" name="password2" placeholder="Confirm Password" value={password2} minLength="6" required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
+              <input type="password" name="password2" placeholder="Confirm Password" value={password2} minLength="6" onChange={onChange} required className="w-full px-4 py-2 border-2 border-blue-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-lg" />
             </div>
             <button type="submit" className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors font-handwritten text-2xl">Register</button>
           </form>
@@ -58,7 +58,7 @@ function RegisterPage() {
           <Link to="/login" className="text-blue-500 hover:underline dark:text-blue-400">Login Now 😊</Link>
         </p>
       </div>
-      <div className="mt-auto"> {/* Pushes footer to the bottom */}
+      <div className="mt-auto">
         <Footer />
       </div>
     </div>
