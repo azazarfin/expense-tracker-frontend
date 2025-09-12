@@ -7,6 +7,7 @@ import AdminAddExpensePage from './pages/AdminAddExpensePage'; // Make sure this
 import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import HistoryPage from './pages/HistoryPage';
+import FundDetailsPage from './pages/FundDetailsPage'; 
 
 // This helper component is now safer and will work correctly
 const HomeRedirect = () => {
@@ -44,6 +45,7 @@ function App() {
             {/* The child paths are now relative */}
             <Route path="dashboard" element={<AdminDashboardPage />} />
             <Route path="add-expense" element={<AdminAddExpensePage />} />
+            <Route path="fund-details" element={<FundDetailsPage />} />
           </Route>
 
           <Route path="/history" element={<PrivateRoute />}>

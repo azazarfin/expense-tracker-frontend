@@ -10,7 +10,7 @@ import ChapterManager from '../components/ChapterManager';
 function AdminDashboardPage() {
   const { activeChapter, isLoadingChapters } = useContext(ChapterContext);
   const [user, setUser] = useState(null);
-  const [stats, setStats] = useState({ centralBalance: 0 });
+  const [stats, setStats] = useState({ centralBalance: 0, totalExpenses: 0 });
   const [users, setUsers] = useState([]);
   const [adminUser, setAdminUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -27,7 +27,7 @@ function AdminDashboardPage() {
     if (!currentUser || !chapter) {
       setUsers([]);
       setTransactions([]);
-      setStats({ centralBalance: 0 });
+      setStats({ centralBalance: 0, totalExpenses: 0 });
       setIsLoading(false);
       return;
     }
@@ -36,13 +36,17 @@ function AdminDashboardPage() {
       const chapterId = chapter._id;
 
       // UPDATED: Use the central API instance directly
-      const [statsRes, usersRes, historyRes] = await Promise.all([
+      const [statsRes, usersRes, historyRes, expensesRes] = await Promise.all([
         API.get(`/chapters/${chapterId}/stats/central-balance`),
         API.get(`/chapters/${chapterId}/users`),
         API.get(`/chapters/${chapterId}/history`),
+        API.get(`/chapters/${chapterId}/stats/total-expenses`),
       ]);
       
-      setStats(statsRes.data);
+    setStats({
+        centralBalance: statsRes.data.centralBalance,
+        totalExpenses: expensesRes.data.totalExpenses,
+     });
       const allTransactions = historyRes.data.filter(item => item.type === 'TRANSACTION').map(item => item.data);
       setTransactions(allTransactions);
       
@@ -109,7 +113,8 @@ function AdminDashboardPage() {
                 <TransactionHistory transactions={transactions} refreshData={refreshData} activeChapterId={activeChapter._id} />
               </div>
               <div className="lg:col-span-1 space-y-8 order-1 lg:order-2">
-                <StatsCard centralBalance={stats.centralBalance} />
+                <StatsCard title="Central Balance" value={stats.centralBalance} color="bg-cyan-500" />
+                <StatsCard title="Total Expense" value={stats.totalExpenses} color="bg-red-500" />
                 <UserBalances users={users} adminUser={adminUser} />
               </div>
             </div>
@@ -127,11 +132,11 @@ function AdminDashboardPage() {
 
 
 // --- Sub-components ---
-const StatsCard = React.memo(function StatsCard({ centralBalance }) {
+const StatsCard = React.memo(function StatsCard({ title = "Central Balance", value = 0, color = "bg-cyan-500" }) {
     return (
-        <div className="bg-cyan-500 text-white p-6 rounded-2xl shadow-lg">
-          <h2 className="text-xl font-semibold opacity-80">Central Balance</h2>
-          <p className="text-5xl font-bold mt-2">{centralBalance.toFixed(2)} <span className="text-3xl opacity-80">TK</span></p>
+        <div className={`${color} text-white p-6 rounded-2xl shadow-lg`}>
+          <h2 className="text-xl font-semibold opacity-80">{title}</h2>
+          <p className="text-5xl font-bold mt-2">{value.toFixed(2)} <span className="text-3xl opacity-80">TK</span></p>
         </div>
     );
 });
@@ -149,6 +154,9 @@ const UserBalances = React.memo(function UserBalances({ users, adminUser }) {
               </li>
             ))}
           </ul>
+          <Link to="/admin/fund-details" className="block text-center mt-4 text-blue-500 dark:text-blue-400 font-semibold hover:underline">
+            More Details &rarr;
+        </Link>
         </div>
     );
 });
@@ -162,11 +170,9 @@ const FundManagement = React.memo(function FundManagement({ users, refreshData, 
       e.preventDefault();
       if (!selectedUser || !amount || amount <= 0) { return alert('Please select a user and enter a valid amount.'); }
       
-      // UPDATED: No '/api' prefix
       const url = `/chapters/${activeChapterId}/users/${selectedUser}/${operation}-balance`;
       
       try {
-        // UPDATED: Use the central API instance
         await API.post(url, { amount: Number(amount) });
         alert('Funds managed successfully!');
         await refreshData();
@@ -190,6 +196,7 @@ const FundManagement = React.memo(function FundManagement({ users, refreshData, 
           <input type="number" step="0.01" placeholder="Enter amount" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-3 border-2 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-gray-100 rounded-lg" required />
           <button type="submit" className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 font-handwritten text-2xl">Done</button>
         </form>
+        
       </div>
     );
 });
@@ -210,7 +217,6 @@ const TransactionHistory = React.memo(function TransactionHistory({ transactions
     const handleDelete = async (id) => {
       if (window.confirm('Are you sure you want to delete this transaction? This will revert the funds.')) {
         try {
-          // UPDATED: Use the central API instance and no '/api' prefix
           await API.delete(`/chapters/${activeChapterId}/transactions/${id}`);
           alert('Transaction deleted.');
           await refreshData();
